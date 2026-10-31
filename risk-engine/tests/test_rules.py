@@ -37,6 +37,15 @@ def test_madrugada_sozinha_nao_bloqueia():
     assert d.decisao == "APROVADA" and "horario_atipico" in d.motivos
 
 
+def test_horario_usa_fuso_de_brasilia():
+    # 02:30 UTC = 23:30 em Brasilia -> horario normal
+    d1 = avaliar(_tx(timestamp=MEIO_DIA.replace(hour=2, minute=30)))
+    assert "horario_atipico" not in d1.motivos
+    # 06:00 UTC = 03:00 em Brasilia -> madrugada
+    d2 = avaliar(_tx(timestamp=MEIO_DIA.replace(hour=6)))
+    assert "horario_atipico" in d2.motivos
+
+
 def test_endpoint_evaluate():
     r = client.post("/risk/evaluate", json={
         "id": "t9", "conta_origem": "c1", "chave_destino": "k1",

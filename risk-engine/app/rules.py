@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from .schemas import Decisao, Transacao
+
+FUSO_BRASIL = ZoneInfo("America/Sao_Paulo")
 
 # Limiares iniciais (didaticos). Depois viram perfil por usuario no Redis.
 VALOR_ALTO = 5000.0
@@ -25,7 +28,8 @@ def avaliar(tx: Transacao) -> Decisao:
         score += 40
         motivos.append("valor_alto")
 
-    if HORA_INICIO_MADRUGADA <= _utc(tx.timestamp).hour < HORA_FIM_MADRUGADA:
+    hora_local = _utc(tx.timestamp).astimezone(FUSO_BRASIL).hour
+    if HORA_INICIO_MADRUGADA <= hora_local < HORA_FIM_MADRUGADA:
         score += 20
         motivos.append("horario_atipico")
 
