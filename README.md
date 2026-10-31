@@ -34,6 +34,22 @@ uvicorn app.main:app --reload
 
 Testes (na raiz do repositório): `pytest`
 
+### Gerador de transações simuladas
+
+```bash
+# só imprime 10 lotes (precisa apenas do Python)
+python tx-generator/generator.py --dry-run --count 10
+
+# publica no Kafka (via Docker); acompanhe em http://localhost:8080
+docker compose up -d --build tx-generator
+docker compose logs -f tx-generator
+docker compose stop tx-generator
+```
+
+Cenários de golpe simulados: valor muito alto para chave nova, madrugada com chave recente
+e rajada de transferências. Cada mensagem leva um campo `rotulo` (a verdade conhecida),
+usado depois para medir acertos e falsos positivos.
+
 ## Regras iniciais
 
 - valor alto (>= R$ 5.000)
@@ -47,7 +63,7 @@ Testes (na raiz do repositório): `pytest`
 - [x] Infra local (Kafka, Postgres, Redis)
 - [x] risk-engine com regras básicas e testes
 - [x] Perfil do usuário no Redis (valor fora do hábito e transferências em sequência)
-- [ ] tx-generator publicando no Kafka
+- [x] tx-generator publicando no Kafka
 - [ ] authorization-service (Spring Boot)
 - [ ] Métricas (latência p95, taxa de bloqueio, falsos positivos)
 - [ ] Modelo de anomalia (Isolation Forest)

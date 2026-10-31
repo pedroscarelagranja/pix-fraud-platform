@@ -72,6 +72,20 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
+  # Gerador de transacoes simuladas (nao sobe junto com o resto; chame pelo nome):
+  #   docker compose up -d --build tx-generator
+  tx-generator:
+    build: ./tx-generator
+    container_name: pix-tx-generator
+    profiles: ["generator"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      RATE_PER_SEC: "2"
+      FRAUD_RATIO: "0.15"
+
 volumes:
   postgres_data:
   redis_data:
