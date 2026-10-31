@@ -1,15 +1,19 @@
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from .schemas import Decisao, Transacao
+from .schemas import Decisao, PerfilUsuario, Transacao
 
 FUSO_BRASIL = ZoneInfo("America/Sao_Paulo")
 
-# Limiares iniciais (didaticos). Depois viram perfil por usuario no Redis.
+# Limiares iniciais (didaticos).
 VALOR_ALTO = 5000.0
 JANELA_CHAVE_RECENTE = timedelta(hours=24)
 HORA_INICIO_MADRUGADA = 0
 HORA_FIM_MADRUGADA = 5  # exclusivo
+
+MIN_HISTORICO = 5        # transacoes necessarias antes de confiar no perfil
+FATOR_FORA_HABITO = 5.0  # valor > 5x a media do usuario
+LIMIAR_RAJADA = 3        # tentativas na janela para considerar "em sequencia"
 
 LIMIAR_BLOQUEIO = 70
 LIMIAR_REVISAO = 40
@@ -20,7 +24,11 @@ def _utc(dt: datetime) -> datetime:
     return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
 
 
-def avaliar(tx: Transacao) -> Decisao:
+def avaliar(
+    tx: Transacao,
+    perfil: PerfilUsuario | None = None,
+    tentativas_recentes: int = 0,
+) -> Decisao:
     score = 0
     motivos: list[str] = []
 
@@ -38,6 +46,14 @@ def avaliar(tx: Transacao) -> Decisao:
         if idade_chave < JANELA_CHAVE_RECENTE:
             score += 40
             motivos.append("chave_recente")
+
+    if perfil is not None and perfil.qtd >= MIN_HISTORICO and tx.valor > perfil.media * FATOR_FORA_HABITO:
+        score += 40
+        motivos.append("valor_fora_do_habito")
+
+    if tentativas_recentes >= LIMIAR_RAJADA:
+        score += 30
+        motivos.append("transferencias_em_sequencia")
 
     if score >= LIMIAR_BLOQUEIO:
         decisao = "BLOQUEADA"

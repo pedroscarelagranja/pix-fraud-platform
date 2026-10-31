@@ -39,13 +39,14 @@ Testes (na raiz do repositório): `pytest`
 - valor alto (>= R$ 5.000)
 - horário atípico (madrugada)
 - chave PIX criada há menos de 24h
-- (próximas) transferências em sequência, valor fora do hábito do usuário
+- valor fora do hábito do usuário (> 5x a média, após 5 transações) — perfil no Redis
+- transferências em sequência (3+ tentativas em 60s)
 
 ## Roadmap
 
 - [x] Infra local (Kafka, Postgres, Redis)
 - [x] risk-engine com regras básicas e testes
-- [ ] Perfil do usuário no Redis
+- [x] Perfil do usuário no Redis (valor fora do hábito e transferências em sequência)
 - [ ] tx-generator publicando no Kafka
 - [ ] authorization-service (Spring Boot)
 - [ ] Métricas (latência p95, taxa de bloqueio, falsos positivos)

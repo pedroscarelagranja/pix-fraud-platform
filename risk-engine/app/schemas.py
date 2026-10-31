@@ -14,6 +14,13 @@ class Transacao(BaseModel):
     chave_criada_em: datetime | None = None
 
 
+class PerfilUsuario(BaseModel):
+    """Resumo do habito de uma conta: quantas transacoes aprovadas e o valor medio."""
+
+    qtd: int = 0
+    media: float = 0.0
+
+
 class Decisao(BaseModel):
     transacao_id: str
     decisao: Literal["APROVADA", "EM_REVISAO", "BLOQUEADA"]
