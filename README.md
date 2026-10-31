@@ -13,7 +13,8 @@ Veja [docs/architecture.md](docs/architecture.md).
 | Componente | Tecnologia | Papel |
 |---|---|---|
 | tx-generator | Python | Simula transações (inclui golpes) |
-| authorization-service | Java, Spring Boot | Autoriza/bloqueia a transação |
+| authorization-worker | Python (provisório) | Lê o Kafka, consulta a engine e publica a decisão |
+| authorization-service | Java, Spring Boot | Versão final do serviço de autorização |
 | risk-engine | Python, FastAPI | Regras antifraude e score de risco |
 | Mensageria | Kafka | Ingestão e eventos |
 | Dados | PostgreSQL, Redis | Histórico e perfil do usuário |
@@ -33,6 +34,17 @@ uvicorn app.main:app --reload
 ```
 
 Testes (na raiz do repositório): `pytest`
+
+### Pipeline completo (tudo em containers)
+
+```bash
+docker compose up -d --build                 # infra + risk-engine + authorization-worker
+docker compose up -d --build tx-generator    # começa a gerar transações
+docker compose logs -f authorization-worker  # decisões em tempo real
+```
+
+As decisões aparecem no tópico `decisoes.pix` (Kafka UI em http://localhost:8080).
+Mensagens inválidas vão para `transacoes.pix.dlq`.
 
 ### Gerador de transações simuladas
 
@@ -64,6 +76,7 @@ usado depois para medir acertos e falsos positivos.
 - [x] risk-engine com regras básicas e testes
 - [x] Perfil do usuário no Redis (valor fora do hábito e transferências em sequência)
 - [x] tx-generator publicando no Kafka
-- [ ] authorization-service (Spring Boot)
+- [x] authorization-worker em Python (transacoes.pix → engine → decisoes.pix)
+- [ ] authorization-service (Spring Boot), substituindo o worker
 - [ ] Métricas (latência p95, taxa de bloqueio, falsos positivos)
 - [ ] Modelo de anomalia (Isolation Forest)

@@ -72,6 +72,37 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
+  # Engine de risco (FastAPI) em container; porta 8000
+  risk-engine:
+    build: ./risk-engine
+    container_name: pix-risk-engine
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Servico de autorizacao (versao Python provisoria): transacoes.pix -> engine -> decisoes.pix
+  authorization-worker:
+    build: ./authorization-worker
+    container_name: pix-authorization-worker
+    depends_on:
+      kafka:
+        condition: service_healthy
+      risk-engine:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ENGINE_URL: http://risk-engine:8000
+    restart: unless-stopped
+
   # Gerador de transacoes simuladas (nao sobe junto com o resto; chame pelo nome):
   #   docker compose up -d --build tx-generator
   tx-generator:
