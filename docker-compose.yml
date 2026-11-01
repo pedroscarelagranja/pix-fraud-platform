@@ -103,6 +103,21 @@ services:
       ENGINE_URL: http://risk-engine:8000
     restart: unless-stopped
 
+  # Relatorio de metricas (le decisoes.pix e grava docs/metricas.md):
+  #   docker compose run --rm metrics
+  metrics:
+    build: ./metrics
+    container_name: pix-metrics
+    profiles: ["tools"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    volumes:
+      - ./docs:/out
+    command: ["python", "report.py", "--out", "/out/metricas.md"]
+
   # Gerador de transacoes simuladas (nao sobe junto com o resto; chame pelo nome):
   #   docker compose up -d --build tx-generator
   tx-generator:

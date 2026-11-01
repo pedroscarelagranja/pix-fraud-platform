@@ -46,6 +46,15 @@ docker compose logs -f authorization-worker  # decisões em tempo real
 As decisões aparecem no tópico `decisoes.pix` (Kafka UI em http://localhost:8080).
 Mensagens inválidas vão para `transacoes.pix.dlq`.
 
+### Métricas
+
+```bash
+docker compose run --rm metrics    # lê decisoes.pix e gera docs/metricas.md
+```
+
+Compara cada decisão com o `rotulo` (verdade conhecida do gerador) e mostra taxa de detecção
+por tipo de golpe, falsos positivos, precisão e latência (p50/p95/p99).
+
 ### Gerador de transações simuladas
 
 ```bash
@@ -78,5 +87,5 @@ usado depois para medir acertos e falsos positivos.
 - [x] tx-generator publicando no Kafka
 - [x] authorization-worker em Python (transacoes.pix → engine → decisoes.pix)
 - [ ] authorization-service (Spring Boot), substituindo o worker
-- [ ] Métricas (latência p95, taxa de bloqueio, falsos positivos)
+- [x] Relatório de métricas (detecção, falsos positivos, latência p95) em [docs/metricas.md](docs/metricas.md)
 - [ ] Modelo de anomalia (Isolation Forest)
